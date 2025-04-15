@@ -25,7 +25,9 @@ const main = async () => {
     }
 
     if (!templateName) {
-        console.error('Usage: create.ts <template-name> [project-name]');
+        // Get the command name based on how the script is being run
+        const commandName = import.meta.url.includes('atpl') ? 'atpl' : 'create.ts';
+        console.error(`Usage: ${commandName} <template-name> [project-name]`);
         console.error('Available templates:');
 
         if (isRemote) {
@@ -68,6 +70,11 @@ const main = async () => {
 
         if (!response.ok) {
             console.error(`Error fetching ${repoPath}: ${response.status} ${response.statusText}`);
+            // Exit with error code when template is not found
+            if (repoPath.startsWith('templates/') && response.status === 404) {
+                console.error(`Template "${templateName}" not found`);
+                Deno.exit(1);
+            }
             return;
         }
 
