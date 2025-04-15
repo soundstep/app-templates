@@ -3,7 +3,7 @@
 // Local usage: deno run --allow-read --allow-write --allow-net ./create.ts <template-name> [project-name]
 // Remote usage: deno run --allow-read --allow-write --allow-net https://raw.githubusercontent.com/soundstep/app-templates/refs/heads/main/create.ts <template-name> [project-name]
 
-import { copy, exists } from 'jsr:@std/fs@^1.0.16';
+import { copy, exists, emptyDir } from 'jsr:@std/fs@^1.0.16';
 import { dirname, fromFileUrl, join } from 'jsr:@std/path@^1.0.8';
 
 const main = async () => {
@@ -129,14 +129,16 @@ const main = async () => {
             console.error(`Error checking directory: ${error}`);
             Deno.exit(1);
         }
-
+    
         if (!isEmpty) {
-            console.warn(`Warning: Directory "${projectName}" is not empty. Files might be overwritten.`);
-            const overwrite = confirm('Do you want to overwrite existing files? (y/N)');
-            if (!overwrite) {
+            // Only ask for confirmation if directory is not empty
+            console.warn(`Warning: Directory "${projectName}" is not empty. Files will be deleted.`);
+            const proceed = confirm('Do you want to proceed? (y/N)');
+            if (!proceed) {
                 console.log('Aborting.');
                 Deno.exit(0);
             }
+            await emptyDir(projectPath);
         }
     } else {
         await Deno.mkdir(projectPath, { recursive: true });
