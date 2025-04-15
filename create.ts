@@ -18,6 +18,41 @@ const main = async () => {
     const templateName = Deno.args[0];
     let projectName = Deno.args[1] || templateName;
     
+    // Handle the "list" command to show available templates
+    if (templateName === 'list') {
+        console.log('Available templates:');
+        
+        if (isRemote) {
+            // For remote execution, list templates from GitHub
+            try {
+                const templatesUrl = 'https://api.github.com/repos/soundstep/app-templates/contents/templates?ref=deno-templates';
+                const templatesResponse = await fetch(templatesUrl);
+
+                if (templatesResponse.ok) {
+                    const templates = await templatesResponse.json();
+                    for (const template of templates) {
+                        if (template.type === 'dir') {
+                            console.log(`- ${template.name}`);
+                        }
+                    }
+                } else {
+                    console.error(`Could not list templates: ${templatesResponse.statusText}`);
+                }
+            } catch (error) {
+                console.error(`Error listing templates: ${error}`);
+            }
+        } else {
+            // For local execution, list templates from filesystem
+            for (const entry of Deno.readDirSync(join(basePath, 'templates'))) {
+                if (entry.isDirectory) {
+                    console.log(`- ${entry.name}`);
+                }
+            }
+        }
+        
+        Deno.exit(0);
+    }
+    
     // Normalize project name to handle various current directory references
     const isCurrentDir = projectName === '.' || projectName === './' || projectName === '' || projectName === Deno.cwd();
     if (isCurrentDir) {
@@ -28,6 +63,7 @@ const main = async () => {
         // Get the command name based on how the script is being run
         const commandName = import.meta.url.includes('atpl') ? 'atpl' : 'create.ts';
         console.error(`Usage: ${commandName} <template-name> [project-name]`);
+        console.error(`       ${commandName} list`);
         console.error('Available templates:');
 
         if (isRemote) {

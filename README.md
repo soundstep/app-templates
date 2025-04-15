@@ -11,6 +11,7 @@ deno install --global --force --allow-read --allow-write --allow-net -n atpl htt
 ## Usage
 
 ```sh
+atpl list
 atpl deno-vscode new-project
 ```
 
