@@ -7,16 +7,23 @@ import { copy, exists } from 'jsr:@std/fs@^1.0.16';
 import { dirname, fromFileUrl, join } from 'jsr:@std/path@^1.0.8';
 
 const main = async () => {
+    // Force immediate console output
+    console.log("Script started");
+    Deno.stderr.writeSync(new TextEncoder().encode("Debug: Script is running\n"));
+    
     // Determine if we're running remotely
     const isRemote = !import.meta.url.startsWith('file://');
+    Deno.stderr.writeSync(new TextEncoder().encode(`Debug: isRemote = ${isRemote}\n`));
 
     // Determine the base path (file system path)
     const basePath = isRemote
         ? Deno.cwd() // When remote, use current directory
         : fromFileUrl(dirname(import.meta.url)); // Local execution
 
+    // Use multiple output methods to ensure we see something
     console.log(`Base path: ${basePath}`);
-
+    Deno.stderr.writeSync(new TextEncoder().encode(`Debug: Base path = ${basePath}\n`));
+    
     const templateName = Deno.args[0];
     const projectName = Deno.args[1] || templateName;
 
