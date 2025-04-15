@@ -1,7 +1,7 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write
 
 // Local usage: deno run --allow-read --allow-write --allow-net ./create.ts <template-name> [project-name]
-// Remote usage: deno run --allow-read --allow-write --allow-net https://raw.githubusercontent.com/soundstep/app-templates/main/create.ts <template-name> [project-name]
+// Remote usage: deno run --allow-read --allow-write --allow-net https://raw.githubusercontent.com/soundstep/app-templates/refs/heads/main/create.ts <template-name> [project-name]
 
 import { copy, exists } from 'jsr:@std/fs@^1.0.16';
 import { dirname, fromFileUrl, join } from 'jsr:@std/path@^1.0.8';
@@ -14,25 +14,24 @@ const main = async () => {
     const basePath = isRemote
         ? Deno.cwd() // When remote, use current directory
         : fromFileUrl(dirname(import.meta.url)); // Local execution
-    
+
     const templateName = Deno.args[0];
     const projectName = Deno.args[1] || templateName;
 
     if (!templateName) {
         console.error('Usage: create.ts <template-name> [project-name]');
         console.error('Available templates:');
-        
+
         if (isRemote) {
             // For remote execution, list templates from GitHub
             try {
-                const templatesUrl = 
-                    "https://api.github.com/repos/soundstep/app-templates/contents/templates?ref=deno-templates";
+                const templatesUrl = 'https://api.github.com/repos/soundstep/app-templates/contents/templates?ref=deno-templates';
                 const templatesResponse = await fetch(templatesUrl);
-                
+
                 if (templatesResponse.ok) {
                     const templates = await templatesResponse.json();
                     for (const template of templates) {
-                        if (template.type === "dir") {
+                        if (template.type === 'dir') {
                             console.error(`- ${template.name}`);
                         }
                     }
@@ -50,7 +49,7 @@ const main = async () => {
                 }
             }
         }
-        
+
         Deno.exit(1);
     }
 
@@ -60,22 +59,22 @@ const main = async () => {
     async function downloadFromGitHub(repoPath: string, localPath: string, branch = 'deno-templates') {
         const url = `https://api.github.com/repos/soundstep/app-templates/contents/${repoPath}?ref=${branch}`;
         const response = await fetch(url);
-        
+
         if (!response.ok) {
             console.error(`Error fetching ${repoPath}: ${response.status} ${response.statusText}`);
             return;
         }
-        
+
         const items = await response.json();
-        
+
         if (!Array.isArray(items)) {
             console.error(`Unexpected response format for ${repoPath}`);
             return;
         }
-        
+
         for (const item of items) {
             const itemPath = join(localPath, item.name);
-            
+
             if (item.type === 'dir') {
                 // Create directory and recursively download its contents
                 await Deno.mkdir(itemPath, { recursive: true });
@@ -95,16 +94,13 @@ const main = async () => {
 
     // Replace the file download section with the recursive function
     if (isRemote) {
-        // Create a temporary directory for the template
-        templatePath = join(Deno.cwd(), '.temp-template');
+        // Create a temporary directory for the template using Deno's temp directory
+        templatePath = Deno.makeTempDirSync({ prefix: 'app-templates-' });
         try {
-            await Deno.mkdir(templatePath, { recursive: true });
-    
             console.log(`Fetching template from GitHub...`);
-            
+
             // Use the recursive function to download the template
             await downloadFromGitHub(`templates/${templateName}`, templatePath);
-            
         } catch (error) {
             console.error(`Error fetching template: ${error}`);
             Deno.exit(1);
