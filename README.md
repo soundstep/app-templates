@@ -8,6 +8,12 @@ Collection of templates to easily create app structure.
 deno install --global --force --allow-read --allow-write --allow-net -n atpl https://raw.githubusercontent.com/soundstep/app-templates/refs/heads/main/create.ts
 ```
 
+Uninstall:
+
+```sh
+deno uninstall --global atpl
+```
+
 ## Usage
 
 ```sh
