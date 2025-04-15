@@ -116,12 +116,27 @@ const main = async () => {
         Deno.exit(1);
     }
 
+    // Check if directory exists
     if (await exists(projectPath)) {
-        console.warn(`Warning: Directory "${projectName}" already exists. Files might be overwritten.`);
-        const overwrite = confirm('Do you want to overwrite existing files? (y/N)');
-        if (!overwrite) {
-            console.log('Aborting.');
-            Deno.exit(0);
+        // Check if directory is empty
+        let isEmpty = true;
+        try {
+            for await (const _ of Deno.readDir(projectPath)) {
+                isEmpty = false;
+                break;
+            }
+        } catch (error) {
+            console.error(`Error checking directory: ${error}`);
+            Deno.exit(1);
+        }
+
+        if (!isEmpty) {
+            console.warn(`Warning: Directory "${projectName}" is not empty. Files might be overwritten.`);
+            const overwrite = confirm('Do you want to overwrite existing files? (y/N)');
+            if (!overwrite) {
+                console.log('Aborting.');
+                Deno.exit(0);
+            }
         }
     } else {
         await Deno.mkdir(projectPath, { recursive: true });
