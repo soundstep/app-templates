@@ -2,16 +2,21 @@
 
 import { copy } from 'jsr:@std/fs/copy';
 import { exists } from 'jsr:@std/fs/exists';
-import { join } from 'jsr:@std/path/join';
+import { dirname, fromFileUrl, join } from 'jsr:@std/path';
 
 const main = async () => {
+    // Determine the base path (file system path)
+    const basePath = import.meta.url.startsWith('file://')
+        ? fromFileUrl(dirname(import.meta.url)) // Local execution
+        : new URL('.', import.meta.url).pathname; // Remote execution (normalized)
+
     const templateName = Deno.args[0];
-    const projectName = Deno.args[1] || templateName; // Default project name to template name
+    const projectName = Deno.args[1] || templateName;
 
     if (!templateName) {
         console.error('Usage: create.ts <template-name> [project-name]');
         console.error('Available templates:');
-        for (const entry of Deno.readDirSync('./templates')) {
+        for (const entry of Deno.readDirSync(join(basePath, 'templates'))) {
             if (entry.isDirectory) {
                 console.error(`- ${entry.name}`);
             }
@@ -19,11 +24,11 @@ const main = async () => {
         Deno.exit(1);
     }
 
-    const templatePath = join(Deno.cwd(), 'templates', templateName);
+    const templatePath = join(basePath, 'templates', templateName);
     const projectPath = join(Deno.cwd(), projectName);
 
     if (!await exists(templatePath)) {
-        console.error(`Error: Template "${templateName}" not found (github.com/soundstep/app-templates)`);
+        console.error(`Error: Template "${templateName}" not found`);
         Deno.exit(1);
     }
 
