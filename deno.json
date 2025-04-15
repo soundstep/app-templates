@@ -1,0 +1,16 @@
+{
+    "tasks": {
+        "dev": "deno run --watch create.ts"
+    },
+    "imports": {},
+    "fmt": {
+        "singleQuote": true,
+        "indentWidth": 4,
+        "lineWidth": 140
+    },
+    "lint": {
+        "exclude": [
+            "no-explicit-any"
+        ]
+    }
+}
