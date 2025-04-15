@@ -95,10 +95,19 @@ const main = async () => {
             // Download each file
             if (Array.isArray(files)) {
                 for (const file of files) {
-                    const fileContent = await fetch(file.download_url);
-                    const content = await fileContent.text();
-                    const filePath = join(templatePath, file.name);
-                    await Deno.writeTextFile(filePath, content);
+                    if (!file.download_url) {
+                        console.log(`Skipping ${file.name} - no download URL (might be a directory)`);
+                        continue;
+                    }
+                    
+                    try {
+                        const fileContent = await fetch(file.download_url);
+                        const content = await fileContent.text();
+                        const filePath = join(templatePath, file.name);
+                        await Deno.writeTextFile(filePath, content);
+                    } catch (error) {
+                        console.error(`Error downloading ${file.name}: ${error}`);
+                    }
                 }
             } else {
                 console.error("Unexpected response format from GitHub API");
