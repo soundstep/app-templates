@@ -5,8 +5,7 @@ Collection of templates to easily create app structure.
 ## Installation
 
 ```sh
-deno install --allow-read --allow-write --allow-net -n atpl
-https://raw.githubusercontent.com/soundstep/app-templates/refs/heads/main/create.ts
+deno install --global --force --allow-read --allow-write --allow-net -n atpl https://raw.githubusercontent.com/soundstep/app-templates/refs/heads/main/create.ts
 ```
 
 ## Usage
