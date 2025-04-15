@@ -16,7 +16,13 @@ const main = async () => {
         : fromFileUrl(dirname(import.meta.url)); // Local execution
 
     const templateName = Deno.args[0];
-    const projectName = Deno.args[1] || templateName;
+    let projectName = Deno.args[1] || templateName;
+    
+    // Normalize project name to handle various current directory references
+    const isCurrentDir = projectName === '.' || projectName === './' || projectName === '' || projectName === Deno.cwd();
+    if (isCurrentDir) {
+        projectName = '.';
+    }
 
     if (!templateName) {
         console.error('Usage: create.ts <template-name> [project-name]');
@@ -150,7 +156,7 @@ const main = async () => {
         console.log(`Project "${projectName}" created successfully!`);
         
         // Only show navigation message if not in current directory
-        if (projectName !== '.') {
+        if (!isCurrentDir) {
             console.log(`Navigate to the project: cd ${projectName}`);
         }
     } catch (error) {
