@@ -56,63 +56,55 @@ const main = async () => {
 
     // For remote execution, we need to fetch the template from GitHub
     let templatePath;
+    // Add a recursive function to download files and directories
+    async function downloadFromGitHub(repoPath: string, localPath: string, branch = 'deno-templates') {
+        const url = `https://api.github.com/repos/soundstep/app-templates/contents/${repoPath}?ref=${branch}`;
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            console.error(`Error fetching ${repoPath}: ${response.status} ${response.statusText}`);
+            return;
+        }
+        
+        const items = await response.json();
+        
+        if (!Array.isArray(items)) {
+            console.error(`Unexpected response format for ${repoPath}`);
+            return;
+        }
+        
+        for (const item of items) {
+            const itemPath = join(localPath, item.name);
+            
+            if (item.type === 'dir') {
+                // Create directory and recursively download its contents
+                await Deno.mkdir(itemPath, { recursive: true });
+                await downloadFromGitHub(`${repoPath}/${item.name}`, itemPath, branch);
+            } else if (item.type === 'file') {
+                // Download file
+                try {
+                    const fileContent = await fetch(item.download_url);
+                    const content = await fileContent.text();
+                    await Deno.writeTextFile(itemPath, content);
+                } catch (error) {
+                    console.error(`Error downloading ${item.name}: ${error}`);
+                }
+            }
+        }
+    }
+
+    // Replace the file download section with the recursive function
     if (isRemote) {
         // Create a temporary directory for the template
         templatePath = join(Deno.cwd(), '.temp-template');
         try {
             await Deno.mkdir(templatePath, { recursive: true });
-
-            // Fetch the template files from GitHub
-            const templateUrl =
-                `https://api.github.com/repos/soundstep/app-templates/contents/templates/${templateName}?ref=deno-templates`;
+    
             console.log(`Fetching template from GitHub...`);
-    
-            const response = await fetch(templateUrl);
             
-            if (!response.ok) {
-                console.error(`Error: Template "${templateName}" not found`);
-                
-                // List available templates from GitHub
-                console.log("Available templates:");
-                const templatesUrl = 
-                    "https://api.github.com/repos/soundstep/app-templates/contents/templates?ref=deno-templates";
-                const templatesResponse = await fetch(templatesUrl);
-                
-                if (templatesResponse.ok) {
-                    const templates = await templatesResponse.json();
-                    for (const template of templates) {
-                        if (template.type === "dir") {
-                            console.log(`- ${template.name}`);
-                        }
-                    }
-                }
-                
-                Deno.exit(1);
-            }
-    
-            const files = await response.json();
-    
-            // Download each file
-            if (Array.isArray(files)) {
-                for (const file of files) {
-                    if (!file.download_url) {
-                        console.log(`Skipping ${file.name} - no download URL (might be a directory)`);
-                        continue;
-                    }
-                    
-                    try {
-                        const fileContent = await fetch(file.download_url);
-                        const content = await fileContent.text();
-                        const filePath = join(templatePath, file.name);
-                        await Deno.writeTextFile(filePath, content);
-                    } catch (error) {
-                        console.error(`Error downloading ${file.name}: ${error}`);
-                    }
-                }
-            } else {
-                console.error("Unexpected response format from GitHub API");
-                Deno.exit(1);
-            }
+            // Use the recursive function to download the template
+            await downloadFromGitHub(`templates/${templateName}`, templatePath);
+            
         } catch (error) {
             console.error(`Error fetching template: ${error}`);
             Deno.exit(1);
