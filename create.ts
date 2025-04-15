@@ -56,24 +56,61 @@ const main = async () => {
             const templateUrl =
                 `https://api.github.com/repos/soundstep/app-templates/contents/templates/${templateName}?ref=deno-templates`;
             console.log(`Fetching template from: ${templateUrl}`);
-
+    
             const response = await fetch(templateUrl);
+            const responseText = await response.text();
+            
             if (!response.ok) {
-                console.error(`Error fetching template: ${response.statusText}`);
+                console.error(`Error fetching template: ${response.status} ${response.statusText}`);
+                console.error(`Response: ${responseText}`);
                 console.error(`Make sure the template "${templateName}" exists in the repository.`);
+                
+                // List available templates from GitHub
+                console.log("Attempting to list available templates from GitHub...");
+                const templatesUrl = 
+                    "https://api.github.com/repos/soundstep/app-templates/contents/templates?ref=deno-templates";
+                const templatesResponse = await fetch(templatesUrl);
+                
+                if (templatesResponse.ok) {
+                    const templates = await templatesResponse.json();
+                    console.log("Available templates on GitHub:");
+                    for (const template of templates) {
+                        if (template.type === "dir") {
+                            console.log(`- ${template.name}`);
+                        }
+                    }
+                } else {
+                    console.error(`Could not list templates: ${templatesResponse.statusText}`);
+                }
+                
                 Deno.exit(1);
             }
-
-            const files = await response.json();
-            console.log(`Found ${files.length} files in template`);
-
+    
+            let files;
+            try {
+                files = JSON.parse(responseText);
+            } catch (e) {
+                console.error("Failed to parse GitHub API response:", e);
+                console.error("Response:", responseText);
+                Deno.exit(1);
+            }
+    
+            console.log(`Found ${Array.isArray(files) ? files.length : 0} files in template`);
+    
             // Download each file
-            for (const file of files) {
-                const fileContent = await fetch(file.download_url);
-                const content = await fileContent.text();
-                const filePath = join(templatePath, file.name);
-                await Deno.writeTextFile(filePath, content);
-                console.log(`Downloaded: ${file.name}`);
+            if (Array.isArray(files)) {
+                for (const file of files) {
+                    console.log(`Downloading: ${file.name} from ${file.download_url}`);
+                    const fileContent = await fetch(file.download_url);
+                    const content = await fileContent.text();
+                    const filePath = join(templatePath, file.name);
+                    await Deno.writeTextFile(filePath, content);
+                    console.log(`Downloaded: ${file.name}`);
+                }
+            } else {
+                console.error("Unexpected response format from GitHub API");
+                console.error(files);
+                Deno.exit(1);
             }
         } catch (error) {
             console.error(`Error fetching template: ${error}`);
