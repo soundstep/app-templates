@@ -1,8 +1,10 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write
 
-import { copy } from 'jsr:@std/fs/copy';
-import { exists } from 'jsr:@std/fs/exists';
-import { dirname, fromFileUrl, join } from 'jsr:@std/path';
+// Local usage: deno run --allow-read --allow-write ./create.ts <template-name> [project-name]
+// Remote usage: deno run --allow-read --allow-write https://raw.githubusercontent.com/soundstep/app-templates/refs/heads/main/create.ts <template-name> [project-name]
+
+import { copy, exists } from 'jsr:@std/fs@^1.0.16';
+import { dirname, fromFileUrl, join } from 'jsr:@std/path@^1.0.8';
 
 const main = async () => {
     // Determine the base path (file system path)
@@ -54,6 +56,7 @@ const main = async () => {
     }
 };
 
+// Make sure to call main() at the end of the file
 if (import.meta.main) {
     await main();
 }
