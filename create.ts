@@ -1,8 +1,8 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write
 
-import { copy } from '@std/fs/copy';
-import { exists } from '@std/fs/exists';
-import { join } from '@std/path/join';
+import { copy } from 'jsr:@std/fs/copy';
+import { exists } from 'jsr:@std/fs/exists';
+import { join } from 'jsr:@std/path/join';
 
 const main = async () => {
     const templateName = Deno.args[0];
