@@ -148,7 +148,11 @@ const main = async () => {
         console.log(`Copying template "${templateName}" to "${projectName}"...`);
         await copy(templatePath, projectPath, { overwrite: true });
         console.log(`Project "${projectName}" created successfully!`);
-        console.log(`Navigate to the project: cd ${projectName}`);
+        
+        // Only show navigation message if not in current directory
+        if (projectName !== '.') {
+            console.log(`Navigate to the project: cd ${projectName}`);
+        }
     } catch (error) {
         console.error('Error copying template:', error);
         Deno.exit(1);
