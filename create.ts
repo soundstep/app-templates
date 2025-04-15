@@ -1,7 +1,7 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write
 
 // Local usage: deno run --allow-read --allow-write ./create.ts <template-name> [project-name]
-// Remote usage: deno run --allow-read --allow-write https://raw.githubusercontent.com/soundstep/app-templates/refs/heads/main/create.ts <template-name> [project-name]
+// Remote usage: deno run --allow-read --allow-write https://raw.githubusercontent.com/soundstep/app-templates/main/create.ts <template-name> [project-name]
 
 import { copy, exists } from 'jsr:@std/fs@^1.0.16';
 import { dirname, fromFileUrl, join } from 'jsr:@std/path@^1.0.8';
@@ -12,6 +12,8 @@ const main = async () => {
         ? fromFileUrl(dirname(import.meta.url)) // Local execution
         : new URL('.', import.meta.url).pathname; // Remote execution (normalized)
 
+    console.log(`Base path: ${basePath}`);
+    
     const templateName = Deno.args[0];
     const projectName = Deno.args[1] || templateName;
 
@@ -26,8 +28,24 @@ const main = async () => {
         Deno.exit(1);
     }
 
+    // Log available templates for debugging
+    console.log('Available templates:');
+    try {
+        for (const entry of Deno.readDirSync(join(basePath, 'templates'))) {
+            if (entry.isDirectory) {
+                console.log(`- ${entry.name}`);
+            }
+        }
+    } catch (error) {
+        console.error(`Error reading templates directory: ${error}`);
+        console.error(`Templates path: ${join(basePath, 'templates')}`);
+    }
+
     const templatePath = join(basePath, 'templates', templateName);
     const projectPath = join(Deno.cwd(), projectName);
+
+    console.log(`Template path: ${templatePath}`);
+    console.log(`Project path: ${projectPath}`);
 
     if (!await exists(templatePath)) {
         console.error(`Error: Template "${templateName}" not found`);
