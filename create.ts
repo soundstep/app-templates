@@ -2,6 +2,7 @@
 
 // Local usage: deno run --allow-read --allow-write --allow-net ./create.ts <template-name> [project-name]
 // Remote usage: deno run --allow-read --allow-write --allow-net https://raw.githubusercontent.com/soundstep/app-templates/refs/heads/main/create.ts <template-name> [project-name]
+// todo: add more info
 
 import { ensureDir, exists } from 'jsr:@std/fs@^1.0.16';
 import { dirname, fromFileUrl, join } from 'jsr:@std/path@^1.0.8';
